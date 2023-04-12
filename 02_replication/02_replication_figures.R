@@ -99,10 +99,8 @@ coeff <- 10
 ggplot(comvot) +
   
   # com votes
-  geom_point(aes(y = value, x = year, colour = comvot)) +
-
-
-  geom_line(aes(y = value, x = year, color = comvot, linetype = comvot)) +
+  geom_point(aes(y = value, x = year, colour = comvot), size = 2.5) +
+  geom_line(aes(y = value, x = year, color = comvot, linetype = comvot), size = 1) +
 
 
   # emigrants
@@ -110,7 +108,7 @@ ggplot(comvot) +
   
   # calls
   geom_line(data = migrants_calls, aes(y = incoming/10, x = year), colour = "#FFA500", stat = "identity") +
-  geom_point(data = migrants_calls, aes(y = incoming/10, x = year), colour = "#FFA500") +
+  geom_point(data = migrants_calls, aes(y = incoming/10, x = year), fill = "#FFA500", color = "#FFA500", shape = 23) +
 
   
   # axis settings
@@ -120,24 +118,25 @@ ggplot(comvot) +
                      
                      sec.axis = ggplot2::sec_axis(~.*10, name = "1000 emigrants / 1000 hours per week", breaks = c(0,100,200,300,400))) +
 
-  
-  scale_linetype_manual(values = c("all_comvot"="solid" ,
-                                   "east_comvot"="dashed",
-                                   "west_comvot" = "dotdash")) +
-  
-  scale_color_manual(values= c("all_comvot"="black" ,
-                               "east_comvot"="red",
-                               "west_comvot" = "blue")) +
+
   
   
   # legend
-  scale_linetype_discrete(labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
-  scale_shape_discrete(labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
-  scale_colour_discrete(labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
+  scale_linetype_manual(values = c("all_comvot"="solid" , "east_comvot"="dashed", "west_comvot" = "dotdash"),
+                          
+                          labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
+  
+  scale_shape_manual(labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
+  
+  scale_colour_manual(values= c("all_comvot"="black" , "east_comvot"="red", "west_comvot" = "blue"),
+                        labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
+  
   guides(linetype = guide_legend(nrow = 3),
          shape = guide_legend(nrow = 3),
-         colour = guide_legend(nrow = 3)) +
+         color = guide_legend(nrow = 3)) +
+  
   labs(linetype = NULL, shape = NULL, colour = NULL,) +
+  
   
   # label financial crisis
   geom_vline(xintercept = 1998.8) +
