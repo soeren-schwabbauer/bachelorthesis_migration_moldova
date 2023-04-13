@@ -43,42 +43,45 @@ community_data <- community_data %>% mutate(prev_mig_west_q2 = ifelse(prev_mig_w
   rename(comvot1998 = comvot98,
          comvot2001 = comvot01,
          comvot2005 = comvot05,
-         comvot2009 = comvot09jul)
+         comvot2009 = comvot09jul,
+         comvot2021 = comvot21jul) %>%
+  
+  drop_na(comvot2021)
 
 
-vars <- c("comvot1998", "comvot2001", "comvot2005", "comvot2009")
+vars <- c("comvot1998", "comvot2001", "comvot2005", "comvot2009", "comvot2021")
 comvot <- list()
 for(i in vars){
-
-# define community types
-community_data <- community_data %>% mutate(prev_mig_west_q2 = ifelse(prev_mig_west > median(prev_mig_west), 2, 1),
-                                            prev_mig_east_q2 = ifelse(prev_mig_east > median(prev_mig_east), 2, 1),
-                                            sh_mig_west_q2 = ifelse(sh_mig_west > 50, 2, 1))
-
-
-
-# create formular for linear model
-formula <- paste(i, "~", paste(controls, collapse = "+"), "+", paste(lights, collapse = "+"), "+", paste(pre_treatment1994, collapse = "+")) %>% formula()
-
-# get residuals & merge to df
-community_data$comvot_r <- lm(formula, data = community_data)$residuals
-
-# all communities
-all_comvot <- community_data %>% pull(i) %>% mean()
-
-west_comvot <- community_data %>% 
-  # west communities
-  filter(sh_mig_west_q2 == 2 & prev_mig_west_q2 == 2) %>%
-  #  # calculate variable
-  pull(comvot_r) %>% mean() + all_comvot
-
-east_comvot <- community_data %>% #
-  # east communities
-  filter(sh_mig_west_q2 == 1 & prev_mig_east_q2 == 2) %>%
-  # calculate variable
-  pull(comvot_r) %>% mean() + all_comvot
-
-comvot[[i]] <- list(all_comvot = all_comvot, west_comvot = west_comvot, east_comvot = east_comvot)
+  
+  # define community types
+  community_data <- community_data %>% mutate(prev_mig_west_q2 = ifelse(prev_mig_west > median(prev_mig_west), 2, 1),
+                                              prev_mig_east_q2 = ifelse(prev_mig_east > median(prev_mig_east), 2, 1),
+                                              sh_mig_west_q2 = ifelse(sh_mig_west > 50, 2, 1))
+  
+  
+  
+  # create formular for linear model
+  formula <- paste(i, "~", paste(controls, collapse = "+"), "+", paste(lights, collapse = "+"), "+", paste(pre_treatment1994, collapse = "+")) %>% formula()
+  
+  # get residuals & merge to df
+  community_data$comvot_r <- lm(formula, data = community_data)$residuals
+  
+  # all communities
+  all_comvot <- community_data %>% pull(i) %>% mean()
+  
+  west_comvot <- community_data %>% 
+    # west communities
+    filter(sh_mig_west_q2 == 2 & prev_mig_west_q2 == 2) %>%
+    #  # calculate variable
+    pull(comvot_r) %>% mean() + all_comvot
+  
+  east_comvot <- community_data %>% #
+    # east communities
+    filter(sh_mig_west_q2 == 1 & prev_mig_east_q2 == 2) %>%
+    # calculate variable
+    pull(comvot_r) %>% mean() + all_comvot
+  
+  comvot[[i]] <- list(all_comvot = all_comvot, west_comvot = west_comvot, east_comvot = east_comvot)
 }
 
 # unbind list
@@ -87,20 +90,20 @@ comvot <- rbindlist(comvot) %>%
   
   # transform to long table
   pivot_longer(cols = ends_with("comvot"), 
-                 names_to = "comvot") %>%
+               names_to = "comvot") %>%
   
   # remove comvot
   mutate(year = gsub("comvot", "", year),
          year = as.numeric(year))
-  
+
 
 fig_1 <- ggplot(comvot) +
   
   # com votes
   geom_point(aes(y = value, x = year, colour = comvot), size = 2.5) +
   geom_line(aes(y = value, x = year, color = comvot, linetype = comvot), size = 1.5) +
-
-
+  
+  
   # emigrants
   geom_bar(data = migrants_calls, aes(y = migrants/10, x = year), fill = "#D3D3D3", stat = "identity") +
   
@@ -110,24 +113,24 @@ fig_1 <- ggplot(comvot) +
   
   
   # axis settings
-  scale_x_continuous(breaks = c(1998, 2001, 2005, 2009), name = "Year of parliamentary election") +
+  scale_x_continuous(breaks = c(1998, 2001, 2005, 2009, 2021), name = "Year of parliamentary election") +
   scale_y_continuous(breaks = c(0, 10, 20, 30, 40, 50, 60),
                      name = "Share of Communist votes (%)",
                      
                      sec.axis = ggplot2::sec_axis(~.*10, name = "1000 emigrants / 1000 hours per week", breaks = c(0,100,200,300,400))) +
-
-
+  
+  
   
   
   # legend
   scale_linetype_manual(values = c("all_comvot"="solid" , "east_comvot"="dashed", "west_comvot" = "dotdash"),
-                          
-                          labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
+                        
+                        labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
   
   scale_shape_manual(labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
   
   scale_colour_manual(values= c("all_comvot"="black" , "east_comvot"="red", "west_comvot" = "blue"),
-                        labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
+                      labels = c("communist votes in all communities", "Communits votes in the communities with high level of emigration the the East", "Communits votes in the communities with high level of emigration the the West")) +
   
   guides(linetype = guide_legend(nrow = 3),
          shape = guide_legend(nrow = 3),
@@ -147,7 +150,7 @@ fig_1 <- ggplot(comvot) +
   theme_classic(base_size = 22) +
   
   theme(legend.position = "bottom") 
-             
+
 
 ggsave(paste0(OUTPUT, "replication_fig_1.png"), width = 40, height = 25, units = "cm")
 unlink(fig_1)
@@ -160,9 +163,9 @@ unlink(fig_1)
 ################################################################################
 ################################################################################
 
-migrants_calls <- read_dta(paste0(INPUT, "mda2_data.dta"))
+# migrants_calls <- read_dta(paste0(INPUT, "mda2_data.dta"))
 
-aoi_boundary_HARV <- st_read(paste0(INPUT, "Moldova.shp"))
+# aoi_boundary_HARV <- st_read(paste0(INPUT, "Moldova.shp"))
 
 
 
@@ -189,22 +192,22 @@ scatterplot_comvot <- function(level){
     x_title = "Prevalence of emigration to the East (%)"
     png_name = "fig_4_3_east"
   }
-    
-figure <- ggplot(community_data, aes(y = comvot09jul, x = get(level)), colour = "red") +
+  
+  figure <- ggplot(community_data, aes(y = comvot21jul, x = get(level)), colour = "red") +
     geom_point(shape = 18) +
     geom_smooth(method = lm, se = FALSE) +
-  
-  
-  # axis settings
+    
+    
+    # axis settings
     scale_x_continuous(limits = c(0, 20), breaks = c(0, 5, 10, 15, 20), name = x_title) +
-
+    
     scale_y_continuous(limits = c(0,100), breaks = c(0, 20, 40, 60, 80, 100), name = "Communist votes (%)") +
-  
-  # title
+    
+    # title
     labs(title = plot_title) + 
     theme_classic() +
     theme(plot.title = element_text(hjust = 0.5))
-
+  
   
   ggsave(paste0(OUTPUT, png_name, ".png"), width = 15, height = 15, units = "cm")
   unlink(png_name)
@@ -219,4 +222,3 @@ fig_4_2 <- scatterplot_comvot("prev_mig_west")
 
 # Migration to the east
 fig_4_3 <- scatterplot_comvot("prev_mig_east")
-

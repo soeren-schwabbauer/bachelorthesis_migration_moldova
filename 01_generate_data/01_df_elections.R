@@ -78,6 +78,9 @@ moldova_results_2021 <- moldova_results_2021 %>%
          csvot21jul = csvot21jul/valvot21jul*100,
          psvot21jul = psvot21jul/valvot21jul*100) %>%
   
+  # calculate comvot variable
+  mutate(comvot21jul = csvot21jul) %>%
+  
   
 # calcualte voter turnout
   mutate(turnout21jul = partvot21jul/regvot21jul*100) %>%
@@ -92,15 +95,20 @@ moldova_results_2021 <- moldova_results_2021 %>%
 var_label(moldova_results_2021) <- list(
   name_prim = "Community Name",
   
+  # voting variables
   regvot21jul = "Registered voters July 2021",
   partvot21jul = "Participating voters July 2021",
   valvot21jul = "Valid votes July 2021",
   invalvot21jul = "Invalid votes July 2021",
   turnout21jul = "Voter turnout July 2021 (%)",
   
+  # parties in General
   asvot21jul = "Party of Action and Solidarity votes July 2021 (%)",
   csvot21jul = "Electoral Bloc of Communists and Socialists votes July 2021 (%)",
-  psvot21jul = "Șor Party votes July 2021 (%)")
+  psvot21jul = "Șor Party votes July 2021 (%)",
+  
+  # communist votes
+  comvot21jul = "Communits Party votes July 2021 (%)")
 
 
 ################################################################################
