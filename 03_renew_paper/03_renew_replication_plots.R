@@ -44,12 +44,13 @@ community_data <- community_data %>% mutate(prev_mig_west_q2 = ifelse(prev_mig_w
          comvot2001 = comvot01,
          comvot2005 = comvot05,
          comvot2009 = comvot09jul,
+         comvot2014 = comvot14nov,
          comvot2021 = comvot21jul) %>%
   
-  drop_na(comvot2021)
+  drop_na(comvot2021, comvot2014)
 
 
-vars <- c("comvot1998", "comvot2001", "comvot2005", "comvot2009", "comvot2021")
+vars <- c("comvot1998", "comvot2001", "comvot2005", "comvot2009", "comvot2014", "comvot2021")
 comvot <- list()
 for(i in vars){
   
@@ -113,7 +114,7 @@ fig_1 <- ggplot(comvot) +
   
   
   # axis settings
-  scale_x_continuous(breaks = c(1998, 2001, 2005, 2009, 2021), name = "Year of parliamentary election") +
+  scale_x_continuous(breaks = c(1998, 2001, 2005, 2009, 2014, 2021), name = "Year of parliamentary election") +
   scale_y_continuous(breaks = c(0, 10, 20, 30, 40, 50, 60),
                      name = "Share of Communist votes (%)",
                      
@@ -146,6 +147,9 @@ fig_1 <- ggplot(comvot) +
   # label na 
   annotate("text", x = 1998, y = 2, label= "n.a.", size = 8) +
   
+  # label calls
+  annotate("text", x = 2008, y = 39, label = "received calls", size = 6, color = "#FFA500") +
+  annotate("text", x = 2002.7, y = 20, label = "emigrants", size = 6, color = "#D3D3D3") +
   
   theme_classic(base_size = 22) +
   
@@ -177,7 +181,7 @@ unlink(fig_1)
 ################################################################################
 load(paste0(INPUT, "community_data.rda"))
 
-scatterplot_comvot <- function(level){
+scatterplot_comvot <- function(level, comvot_election){
   
   if(level == "prev_mig_all"){
     plot_title = "Overall migration"
@@ -193,7 +197,15 @@ scatterplot_comvot <- function(level){
     png_name = "fig_4_3_east"
   }
   
-  figure <- ggplot(community_data, aes(y = comvot21jul, x = get(level)), colour = "red") +
+  if(comvot_election == "comvot21jul"){
+    lab_year = "July 2021"
+  } else if(comvot_election == "comvot14nov"){
+    lab_year = "November 2014"
+  } else if(comvot_election == "comvot09jul"){
+    lab_year = "July 2009"
+  }
+  
+  figure <- ggplot(community_data, aes(y = get(comvot_election), x = get(level)), colour = "red") +
     geom_point(shape = 18) +
     geom_smooth(method = lm, se = FALSE) +
     
@@ -201,7 +213,7 @@ scatterplot_comvot <- function(level){
     # axis settings
     scale_x_continuous(limits = c(0, 20), breaks = c(0, 5, 10, 15, 20), name = x_title) +
     
-    scale_y_continuous(limits = c(0,100), breaks = c(0, 20, 40, 60, 80, 100), name = "Communist votes (%)") +
+    scale_y_continuous(limits = c(0,100), breaks = c(0, 20, 40, 60, 80, 100), name = paste0("Communist votes (%) ", lab_year)) +
     
     # title
     labs(title = plot_title) + 
@@ -209,16 +221,33 @@ scatterplot_comvot <- function(level){
     theme(plot.title = element_text(hjust = 0.5))
   
   
-  ggsave(paste0(OUTPUT, png_name, ".png"), width = 15, height = 15, units = "cm")
+  ggsave(paste0(OUTPUT, png_name, "_", comvot_election,".png"), width = 15, height = 15, units = "cm")
   unlink(png_name)
   
 }
 
+### 2021
 # Overall migration
-fig_4_1 <- scatterplot_comvot("prev_mig_all")
-
+scatterplot_comvot("prev_mig_all", "comvot21jul")
 # Migration to the west
-fig_4_2 <- scatterplot_comvot("prev_mig_west")
-
+scatterplot_comvot("prev_mig_west", "comvot21jul")
 # Migration to the east
-fig_4_3 <- scatterplot_comvot("prev_mig_east")
+scatterplot_comvot("prev_mig_east", "comvot21jul")
+
+### 2014
+# Overall migration
+scatterplot_comvot("prev_mig_all", "comvot14nov")
+# Migration to the west
+scatterplot_comvot("prev_mig_west", "comvot14nov")
+# Migration to the east
+scatterplot_comvot("prev_mig_east", "comvot14nov")
+
+### 2009
+
+# Overall migration
+scatterplot_comvot("prev_mig_all", "comvot09jul")
+# Migration to the west
+scatterplot_comvot("prev_mig_west", "comvot09jul")
+# Migration to the east
+scatterplot_comvot("prev_mig_east", "comvot09jul")
+
