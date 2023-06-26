@@ -9,8 +9,13 @@ rm(list = ls())
 ################################################################################
 
 # load libraries
-pacman::p_load(tidyverse, haven, data.table, gridExtra)
-
+library(tidyr)
+library(dplyr)
+library(haven)
+library(data.table)
+library(gridExtra)
+library(ggplot2)
+library(rlang)
 # define input, output
 INPUT = paste0(getwd(), "/03_renew_paper/INPUT/")
 OUTPUT = paste0(getwd(), "/03_renew_paper/OUTPUT/") 
@@ -98,7 +103,7 @@ comvot <- rbindlist(comvot) %>%
          year = as.numeric(year))
 
 
-fig_1 <- ggplot(comvot) +
+fig_1 <- ggplot2::ggplot(comvot) +
   
   # com votes
   geom_point(aes(y = value, x = year, colour = comvot), size = 2.5) +
@@ -156,7 +161,7 @@ fig_1 <- ggplot(comvot) +
   theme(legend.position = "bottom") 
 
 
-ggsave(paste0(OUTPUT, "replication_fig_1.png"), width = 40, height = 25, units = "cm")
+ggplot2::ggsave(paste0(OUTPUT, "replication_fig_1.png"), width = 40, height = 25, units = "cm")
 unlink(fig_1)
 
 

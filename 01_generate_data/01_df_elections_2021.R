@@ -8,7 +8,7 @@ rm(list = ls())
 ################################################################################
 
 # load libraries
-pacman::p_load(haven, readxl, dplyr, labelled)
+pacman::p_load(haven, readxl, dplyr, labelled, tidyr)
 
 # define input, output
 INPUT = paste0(getwd(), "/01_generate_data/INPUT/")
@@ -97,19 +97,21 @@ election_results_2021 <- election_results_2021 %>%
          name_prim = iconv(name_prim, from = 'UTF-8', to = 'ASCII//TRANSLIT'),
          
          # edit cityparty of chisinau
-         name_prim = gsub("SECTOR BOTANICA", "CHISINAU", name_prim),
-         name_prim = gsub("SECTOR BUIUCANI", "CHISINAU", name_prim),
-         name_prim = gsub("SECTOR CENTRU", "CHISINAU", name_prim),
-         name_prim = gsub("SECTOR CIOCANA", "CHISINAU", name_prim),
-         name_prim = gsub("SECTOR RISCANI", "CHISINAU", name_prim),
-         
-         # communities which differ from the main df
-         name_prim = gsub("CARABETOVCA", "CARABETOVKA", name_prim),  ## ist -> soll werden
-         name_prim = gsub("PLOP-STIUBEI", "PLOPI-STIUBEI", name_prim),
-         name_prim = gsub("POCIUMBENI", "POCUIMBENI", name_prim),
-         name_prim = gsub("BUCOVAT", "BUCOVATI", name_prim),
-         name_prim = gsub("VADUL- RASCOV", "VADUL-RASCOV", name_prim),
-         name_prim = gsub("CIOC- MAIDAN", "CIOC-MAIDAN", name_prim)) %>%
+          name_prim = case_when(name_prim == "SECTOR BOTANICA" ~ "CHISINAU",
+                                name_prim == "SECTOR BUIUCANI" ~ "CHISINAU",
+                                name_prim == "SECTOR CENTRU" ~ "CHISINAU",
+                                name_prim == "SECTOR CIOCANA" ~ "CHISINAU",
+                                name_prim == "SECTOR RISCANI" ~ "CHISINAU",
+                                
+                                # communities which differ from the main df
+                                name_prim == "CARABETOVCA" ~ "CARABETOVKA", ## ist -> soll werden
+                                name_prim == "PLOP-STIUBEI" ~ "PLOPI-STIUBEI",
+                                name_prim == "POCIUMBENI" ~ "POCUIMBENI",
+                                name_prim == "BUCOVAT" ~ "BUCOVATI",
+                                name_prim == "VADUL- RASCOV" ~ "VADUL-RASCOV",
+                                name_prim == "CIOC- MAIDAN" ~ "CIOC-MAIDAN",
+                                name_prim == "IALPUJENI" ~ "IALPUGENI",
+                                .default = as.character(name_prim))) %>%
   
   # select columns
   select(contains("21jul"), contains("name")) %>%
@@ -133,7 +135,7 @@ election_results_2021 <- election_results_2021 %>%
          psvot21jul = psvot21jul/valvot21jul*100) %>%
   
   # calculate comvot variable
-  mutate(comvot21jul = csvot21jul) %>%
+  mutate(comvot21jul = csvot21jul + psvot21jul) %>%
   
   # calcualte voter turnout
   mutate(turnout21jul = partvot21jul/regvot21jul*100) %>%

@@ -1,0 +1,98 @@
+---
+title: "Table 3 - continuous results"
+output: pdf_document
+date: "2023-05-10"
+---
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+```{r , echo = FALSE}
+
+# load libraries
+library(dplyr)
+library(foreign)
+library(huxtable)
+library(utils)
+library(estimatr)
+library(broom)
+
+# define input, output
+INPUT = paste0("C:/users/soere/Documents/migration_moldova", "/01_generate_data/OUTPUT/")
+
+
+# Load dataset
+load(paste0(INPUT, "community_data.rda"))
+
+
+# Define global variables
+controls <- c("pop_1500_3000", "pop_3000_9999", "district_capital", "distance_capital", "dist_bc", "chisinau_balti", "pop_all_0_14_sh", "pop_all_15_34_sh", "pop_all_65_99_sh", "pop_highedu_sh", "pop_lowedu_sh", "ratio_high_low_edu", "eth_rus_sh", "eth_rus_sh2", "eth_ukr_sh", "eth_ukr_sh2", "eth_gag_sh", "eth_gag_sh2", "eth_bul_sh", "eth_bul_sh2", "eth_fract")
+controls2 <- c("pop_1500_3000", "pop_3000_9999", "district_capital", "distance_capital", "dist_bc", "chisinau_balti", "pop_all_0_14_sh", "pop_all_15_34_sh", "pop_all_65_99_sh", "pop_highedu_sh", "pop_lowedu_sh", "ratio_high_low_edu", "eth_rus_sh", "eth_ukr_sh", "eth_gag_sh", "eth_bul_sh", "eth_fract")
+lights <- "lights92_99"
+pre_treatment1998 <- c("comvot98", "pdmvot98", "dcvot98", "pdfvot98", "turnout98")
+pre_treatment1994 <- c("agrarvot94", "socialistvot94", "pibvot94", "apcdfvot94")
+migrant_characteristics <- c("sh_mig_all_15_34", "sh_mig_all_fem", "sh_mig_all_high")
+
+
+# estimate propensity score
+community_data$comvotavg <- rowMeans(community_data[, c("comvot01", "comvot05", "comvot09apr", "comvot09jul", "comvot10")])
+
+model1 <- paste("comvotavg ~ ",
+                paste(controls2, collapse = "+"), "+",
+                paste(pre_treatment1994, collapse = "+"), "+", 
+                paste(pre_treatment1998, collapse = "+"), "+",
+                paste(lights), 
+                "+ as.factor(cod_rai)")
+model1 <- lm_robust(as.formula(model1), data = community_data, clusters = cod_rai, se_type = "stata")
+
+community_data$pscore_avg <- predict(model1, newdata = community_data)
+
+### Communist votes
+table_3 <- function(year){
+  
+  model <- paste(year ,"~ prev_mig_west + prev_mig_east + pscore_avg")
+  model <- lm_robust(as.formula(model), data = community_data, clusters = cod_rai, se_type = "stata")
+
+}
+
+
+table3 <- huxreg("2001" = table_3("comvot01"),
+                 "2005" = table_3("comvot05"),
+                 "April \n 2009" = table_3("comvot09apr"),
+                 "July \n 2009" = table_3("comvot09jul"),
+                 "2010" = table_3("comvot10"),
+                 "2014" = table_3("comvot14nov"),
+                 "2021" = table_3("comvot21jul"),
+                 
+                 coefs = c("Prevalence of emigration to the West (percent)" = "prev_mig_west",
+                           "Prevalence of emigration to the East (percent)" = "prev_mig_east",
+                           "Propensity score" = "pscore_avg",
+                           "Constant" = "(Intercept)"),
+                 
+                 stars = NULL,
+                 align = "r",
+                 error_pos = "same", 
+                 number_format = 2) %>%
+  
+  ## for subcaption
+  insert_row("", "Share of Communist votes in parliamentary elections \n (percent)", "", "", "", "", "", "", after = 0) %>%
+  set_caption("—The Relationship of Migration Patterns and Non-migration Community Characteristics with Communist Votes over Time, 2001–2021") %>%
+  set_align(everywhere, everywhere, "center") %>% 
+
+  merge_cells(1, 2:8) %>%
+  set_bottom_border(1, 2:8) %>%
+  set_bottom_border(2, 1:8) 
+  
+  
+table3<- huxtable::add_footnote(table3, "Notes: The table reports OLS estimates for 848 Moldovan communities. The dependent variables are the vote shares of the Communist Party in the parliamentary elections between 2001 and 2010 at the community level (in percent). These results correspond to the results in Table 2. The propensity score summarizes the role of all non-migration community characteristics in explaining average Communist vote shares over the period 2001–2010. To construct it, we first run a regression of the Communist vote share averaged over the period 2001–2010 on all covariates used in our baseline specification (column 3 of Table 1) except the prevalence of emigration to the West and East. We then define the propensity score as the prediction from this regression. Standard errors, clustered at the district level, are in parentheses.")
+
+col_width(table3) <- c(0.3, 0.09, 0.09, 0.09, 0.09, 0.09, 0.08, 0.09)
+width(table3) <- 1
+wrap(table3) <- TRUE
+font_size(table3) <- 8
+
+position(table3) <- "left"
+
+table3
+
+```

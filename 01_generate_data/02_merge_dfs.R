@@ -25,9 +25,10 @@ load(paste0(TEMP, "election_results_2014.rda"))
 replication_community <- read_dta(paste0(INPUT, "replication_community.dta")) %>%
   
   
-  mutate(name_prim = gsub("OR.DROCHIA", "OR_DROCHIA", name_prim),
-         name_prim = gsub("OR.OCNITA", "OR_OCNITA", name_prim),
-         name_prim = gsub(".*[.]", "", name_prim))
+  mutate(name_prim = gsub("OR.DROCHIA", "OR_DROCHIA", name_prim), # for matching
+         name_prim = gsub("OR.OCNITA", "OR_OCNITA", name_prim), # for matching
+         name_prim = gsub(".*[.]", "", name_prim), # delete everything up to the "."
+         name_rai = gsub("MUN.COMRAT", "UTA GAGAUZIA", name_rai)) #Mun.Comrat is NOT the name of the district, but GAGAUZIA
 
 
 ################################################################################
